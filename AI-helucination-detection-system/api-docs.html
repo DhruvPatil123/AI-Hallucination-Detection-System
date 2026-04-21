@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Reference — Nexa AI AHDS</title>
+  <meta name="description" content="Complete API reference for the AI Hallucination Detection System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .docs-layout { display: grid; grid-template-columns: 240px 1fr; gap: 0; margin-top: var(--topbar-h); min-height: calc(100vh - var(--topbar-h)); }
+    .docs-sidebar { position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h)); overflow-y: auto; padding: 2rem 1rem; border-right: 1px solid var(--glass-border); background: rgba(255,255,255,.012); }
+    .docs-main { padding: 3rem 4rem 6rem; max-width: 860px; }
+    .docs-sidebar-link { display: block; padding: .4rem .75rem; border-radius: 8px; font-size: .82rem; color: var(--text-slate); transition: all .2s; text-decoration: none; margin-bottom: .1rem; }
+    .docs-sidebar-link:hover { color: var(--text-white); background: rgba(255,255,255,.05); }
+    .docs-sidebar-link.active { color: var(--accent-primary); background: rgba(0,217,255,.08); }
+    .docs-sidebar-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-slate); padding: .5rem .75rem .25rem; margin-top: .75rem; display: block; }
+    .endpoint-title { font-size: 1.5rem; font-weight: 800; color: var(--text-white); margin-bottom: .5rem; }
+    .endpoint-desc { color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.7; }
+    .section-divider { height: 1px; background: var(--glass-border); margin: 3rem 0; }
+    .sub-heading { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-slate); margin-bottom: .75rem; }
+    .sdk-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .sdk-badge { display: flex; align-items: center; gap: .5rem; padding: .5rem 1rem; border: 1px solid var(--glass-border); border-radius: 10px; font-size: .82rem; color: var(--text-muted); background: var(--glass-bg); }
+    @media (max-width: 900px) { .docs-layout { grid-template-columns: 1fr; } .docs-sidebar { display: none; } .docs-main { padding: 2rem 1.5rem; } }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <header class="inner-topbar">
+    <a href="index.html" class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00d9ff"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#00d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Nexa AI
+    </a>
+    <nav class="topbar-nav">
+      <a href="index.html">Home</a>
+      <a href="demo.html">Live Demo</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="api-docs.html" class="active">API Docs</a>
+    </nav>
+    <div class="topbar-right">
+      <a href="#authentication" class="btn btn-shimmer" style="padding:.4rem 1rem; font-size:.82rem;">Get API Key</a>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <span class="docs-sidebar-label">Getting Started</span>
+      <a href="#overview" class="docs-sidebar-link active" data-target="overview">Overview</a>
+      <a href="#authentication" class="docs-sidebar-link" data-target="authentication">Authentication</a>
+      <a href="#sdks" class="docs-sidebar-link" data-target="sdks">SDK Installation</a>
+      <a href="#errors" class="docs-sidebar-link" data-target="errors">Error Handling</a>
+
+      <span class="docs-sidebar-label">Endpoints</span>
+      <a href="#verify" class="docs-sidebar-link" data-target="verify">POST /verify</a>
+      <a href="#batch" class="docs-sidebar-link" data-target="batch">POST /batch</a>
+      <a href="#feedback" class="docs-sidebar-link" data-target="feedback">POST /feedback</a>
+      <a href="#logs" class="docs-sidebar-link" data-target="logs">GET /logs</a>
+
+      <span class="docs-sidebar-label">Reference</span>
+      <a href="#schema" class="docs-sidebar-link" data-target="schema">Response Schema</a>
+      <a href="#rate-limits" class="docs-sidebar-link" data-target="rate-limits">Rate Limits</a>
+      <a href="#categories" class="docs-sidebar-link" data-target="categories">Hallucination Categories</a>
+    </aside>
+
+    <!-- Main -->
+    <main class="docs-main">
+
+      <!-- Overview -->
+      <div class="endpoint-block" id="overview">
+        <div class="endpoint-title">API Reference</div>
+        <p class="endpoint-desc">The AHDS API is a RESTful service that accepts LLM-generated text and returns a structured hallucination verification report. All endpoints use JSON request/response bodies and Bearer token authentication.</p>
+        <div class="info-box info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Base URL: <code style="font-family:'JetBrains Mono',monospace; color:var(--accent-primary);">https://api.nexa-ai.com/v1</code></span>
+        </div>
+        <div class="info-box success">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>p95 latency target: &lt;200ms &nbsp;|&nbsp; p99 target: &lt;500ms &nbsp;|&nbsp; Uptime SLA: 99.9%</span>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Authentication -->
+      <div class="endpoint-block" id="authentication">
+        <div class="endpoint-title">Authentication</div>
+        <p class="endpoint-desc">All requests must include your API key in the <code style="font-family:'JetBrains Mono',monospace;color:#7dd3fc;">Authorization</code> header as a Bearer token. API keys are scoped per integration and carry configurable rate limits.</p>
+        <div class="sub-heading">Example</div>
+        <div style="position:relative;">
+          <div class="code-block" id="auth-code">Authorization: Bearer nexaai_sk_prod_8f4a2c91d3e7b05f...</div>
+          <button class="copy-btn" data-copy="auth-code">Copy</button>
+        </div>
+        <div class="info-box warning" style="margin-top:1rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Never expose API keys in client-side code or public repositories.
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- SDK -->
+      <div class="endpoint-block" id="sdks">
+        <div class="endpoint-title">SDK Installation</div>
+        <p class="endpoint-desc">Official SDKs are available for Python, TypeScript/JavaScript, and Java.</p>
+        <div class="sdk-row">
+          <div class="sdk-badge">🐍 Python</div>
+          <div class="sdk-badge">📘 TypeScript</div>
+          <div class="sdk-badge">☕ Java</div>
+        </div>
+        <div class="tab-bar" id="sdk-tabs" style="margin-bottom:.75rem;">
+          <button class="tab-btn active" data-tab="sdk-py">Python</button>
+          <button class="tab-btn" data-tab="sdk-ts">TypeScript</button>
+          <button class="tab-btn" data-tab="sdk-java">Java</button>
+        </div>
+        <div style="position:relative;">
+          <div class="tab-pane active" id="sdk-py">
+            <div class="code-block" id="sdk-py-code">pip install nexa-ahds</div>
+          </div>
+          <div class="tab-pane" id="sdk-ts">
+            <div class="code-block" id="sdk-ts-code">npm install @nexa-ai/ahds</div>
+          </div>
+          <div class="tab-pane" id="sdk-java">
+            <div class="code-block" id="sdk-java-code">&lt;dependency&gt;
+  &lt;groupId&gt;com.nexaai&lt;/groupId&gt;
+  &lt;artifactId&gt;ahds-sdk&lt;/artifactId&gt;
+  &lt;version&gt;1.0.4&lt;/version&gt;
+&lt;/dependency&gt;</div>
+          </div>
+          <button class="copy-btn" id="sdk-copy">Copy</button>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- POST /verify -->
+      <div class="endpoint-block" id="verify">
+        <div class="endpoint-title">Verify Endpoint</div>
+        <p class="endpoint-desc">The primary synchronous detection endpoint. Submits an LLM-generated text response and returns a full hallucination verification report within the p95 latency target.</p>
+        <div class="endpoint-url">
+          <span class="method-badge method-post">POST</span>
+          /v1/verify
+        </div>
+
+        <div class="sub-heading">Request Parameters</div>
+        <table class="param-table">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">text</td><td class="param-type">string</td><td><span class="param-req required">required</span></td><td class="param-desc">The LLM-generated text to verify. Max 32,000 characters.</td></tr>
+            <tr><td class="param-name">domain</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Domain context: <code style="font-family:monospace;color:#c4b5fd;">general | medical | legal | financial</code>. Default: <code style="font-family:monospace;color:#c4b5fd;">general</code></td></tr>
+            <tr><td class="param-name">threshold</td><td class="param-type">float</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Minimum confidence to include a span in results. Range 0.0–1.0. Default: 0.4</td></tr>
+            <tr><td class="param-name">context</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Original prompt or context provided to the LLM. Improves grounding accuracy.</td></tr>
+            <tr><td class="param-name">model_id</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Identifier of the source LLM (e.g. <code style="font-family:monospace;color:#c4b5fd;">gpt-4o</code>). Used in audit logs.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="sub-heading">Code Examples</div>
+        <div class="tab-bar" id="verify-tabs" style="margin-bottom:.75rem;">
+          <button class="tab-btn active" data-tab="v-py">Python</button>
+          <button class="tab-btn" data-tab="v-ts">TypeScript</button>
+          <button class="tab-btn" data-tab="v-curl">cURL</button>
+        </div>
+        <div style="position:relative;">
+          <div class="tab-pane active" id="v-py">
+            <div class="code-block" id="v-py-code">from nexa_ahds import AHDSClient
+
+client = AHDSClient(api_key="nexaai_sk_prod_...")
+
+result = client.verify(
+    text="Aspirin 1200mg is the standard dose for MI...",
+    domain="medical",
+    threshold=0.4,
+    model_id="gpt-4o"
+)
+
+print(result.hallucination_score)   <span class="cmt"># 0.82</span>
+print(result.risk_level)            <span class="cmt"># "high"</span>
+for span in result.flagged_spans:
+    print(span.category, span.confidence)</div>
+          </div>
+          <div class="tab-pane" id="v-ts">
+            <div class="code-block" id="v-ts-code">import { AHDSClient } from '@nexa-ai/ahds';
+
+const client = new AHDSClient({ apiKey: 'nexaai_sk_prod_...' });
+
+const result = await client.verify({
+  text: 'Aspirin 1200mg is the standard dose for MI...',
+  domain: 'medical',
+  threshold: 0.4,
+  modelId: 'gpt-4o',
+});
+
+console.log(result.hallucinationScore); <span class="cmt">// 0.82</span>
+console.log(result.riskLevel);          <span class="cmt">// "high"</span></div>
+          </div>
+          <div class="tab-pane" id="v-curl">
+            <div class="code-block" id="v-curl-code">curl -X POST https://api.nexa-ai.com/v1/verify \
+  -H "Authorization: Bearer nexaai_sk_prod_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Aspirin 1200mg is the standard dose for MI...",
+    "domain": "medical",
+    "threshold": 0.4,
+    "model_id": "gpt-4o"
+  }'</div>
+          </div>
+          <button class="copy-btn" id="verify-copy">Copy</button>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- POST /batch -->
+      <div class="endpoint-block" id="batch">
+        <div class="endpoint-title">Batch Endpoint</div>
+        <p class="endpoint-desc">Asynchronous endpoint for high-volume offline processing. Accepts up to 500 records per request. Returns a <code style="font-family:monospace;color:#7dd3fc;">job_id</code> immediately; poll <code style="font-family:monospace;color:#7dd3fc;">/v1/batch/{job_id}</code> for results.</p>
+        <div class="endpoint-url">
+          <span class="method-badge method-post">POST</span>
+          /v1/batch
+        </div>
+        <table class="param-table">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">records</td><td class="param-type">array</td><td><span class="param-req required">required</span></td><td class="param-desc">Array of verify request objects. Max 500 items per batch.</td></tr>
+            <tr><td class="param-name">webhook_url</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc">URL to POST results to when batch completes. Must be HTTPS.</td></tr>
+            <tr><td class="param-name">priority</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc"><code style="font-family:monospace;color:#c4b5fd;">normal | high</code>. Enterprise tier only. Default: <code style="font-family:monospace;color:#c4b5fd;">normal</code></td></tr>
+          </tbody>
+        </table>
+        <div style="position:relative;">
+          <div class="code-block" id="batch-code">curl -X POST https://api.nexa-ai.com/v1/batch \
+  -H "Authorization: Bearer nexaai_sk_prod_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "records": [
+      { "id": "rec_001", "text": "...", "domain": "medical" },
+      { "id": "rec_002", "text": "...", "domain": "legal" }
+    ],
+    "webhook_url": "https://yourapp.com/webhooks/ahds"
+  }'</div>
+          <button class="copy-btn" data-copy="batch-code">Copy</button>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- POST /feedback -->
+      <div class="endpoint-block" id="feedback">
+        <div class="endpoint-title">Feedback Endpoint</div>
+        <p class="endpoint-desc">Submit human-validated ground truth labels for flagged spans. Validated feedback is incorporated into the weekly model retraining cycle, improving detection accuracy over time.</p>
+        <div class="endpoint-url">
+          <span class="method-badge method-post">POST</span>
+          /v1/feedback
+        </div>
+        <table class="param-table">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">request_id</td><td class="param-type">string</td><td><span class="param-req required">required</span></td><td class="param-desc">The UUID from the original /verify response.</td></tr>
+            <tr><td class="param-name">span_id</td><td class="param-type">integer</td><td><span class="param-req required">required</span></td><td class="param-desc">Index of the flagged span to label.</td></tr>
+            <tr><td class="param-name">label</td><td class="param-type">string</td><td><span class="param-req required">required</span></td><td class="param-desc"><code style="font-family:monospace;color:#c4b5fd;">correct | incorrect</code> — whether the detection was accurate.</td></tr>
+            <tr><td class="param-name">corrected_text</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc">The factually correct version of the flagged text.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- GET /logs -->
+      <div class="endpoint-block" id="logs">
+        <div class="endpoint-title">Audit Logs</div>
+        <p class="endpoint-desc">Retrieve paginated audit logs for all flagged outputs. Logs include metadata required for compliance reporting and are retained for 90 days.</p>
+        <div class="endpoint-url">
+          <span class="method-badge method-get">GET</span>
+          /v1/logs
+        </div>
+        <table class="param-table">
+          <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">from</td><td class="param-type">ISO 8601</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Start of time range. Default: 24 hours ago.</td></tr>
+            <tr><td class="param-name">to</td><td class="param-type">ISO 8601</td><td><span class="param-req optional">optional</span></td><td class="param-desc">End of time range. Default: now.</td></tr>
+            <tr><td class="param-name">risk_level</td><td class="param-type">string</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Filter by: <code style="font-family:monospace;color:#c4b5fd;">low | medium | high | critical</code></td></tr>
+            <tr><td class="param-name">limit</td><td class="param-type">integer</td><td><span class="param-req optional">optional</span></td><td class="param-desc">Results per page. Max 1000. Default: 100.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Response Schema -->
+      <div class="endpoint-block" id="schema">
+        <div class="endpoint-title">Response Schema</div>
+        <p class="endpoint-desc">Every <code style="font-family:monospace;color:#7dd3fc;">/verify</code> response conforms to the following structure:</p>
+        <div style="position:relative;">
+          <div class="code-block" id="schema-code">{
+  <span class="key">"request_id"</span>:          <span class="str">"uuid-v4"</span>,
+  <span class="key">"hallucination_score"</span>: <span class="num">0.0</span>–<span class="num">1.0</span>,
+  <span class="key">"risk_level"</span>:          <span class="str">"low | medium | high | critical"</span>,
+  <span class="key">"flagged_spans"</span>: [
+    {
+      <span class="key">"span_id"</span>:    <span class="num">0</span>,
+      <span class="key">"start"</span>:     <span class="type">int</span>,
+      <span class="key">"end"</span>:       <span class="type">int</span>,
+      <span class="key">"text"</span>:      <span class="str">"string"</span>,
+      <span class="key">"category"</span>:  <span class="str">"factual|citation|logical|numerical|temporal"</span>,
+      <span class="key">"confidence"</span>: <span class="num">0.0</span>–<span class="num">1.0</span>,
+      <span class="key">"evidence"</span>:  <span class="str">"string | null"</span>
+    }
+  ],
+  <span class="key">"processing_time_ms"</span>: <span class="type">int</span>,
+  <span class="key">"model_version"</span>:      <span class="str">"ahds-v1.0.4"</span>
+}</div>
+          <button class="copy-btn" data-copy="schema-code">Copy</button>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Rate Limits -->
+      <div class="endpoint-block" id="rate-limits">
+        <div class="endpoint-title">Rate Limits</div>
+        <p class="endpoint-desc">Rate limits are applied per API key. Exceeding limits returns <code style="font-family:monospace;color:#fda4af;">429 Too Many Requests</code> with a <code style="font-family:monospace;color:#7dd3fc;">Retry-After</code> header.</p>
+        <table class="param-table">
+          <thead><tr><th>Plan</th><th>RPM</th><th>Batch Records/Min</th><th>Concurrent Requests</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text-white);font-weight:600;">Starter</td><td class="param-type">200</td><td class="param-type">100</td><td class="param-type">5</td></tr>
+            <tr><td style="color:var(--text-white);font-weight:600;">Enterprise</td><td class="param-type">1,000</td><td class="param-type">500</td><td class="param-type">20</td></tr>
+            <tr><td style="color:var(--text-white);font-weight:600;">Dedicated</td><td class="param-type">Custom</td><td class="param-type">Custom</td><td class="param-type">Unlimited</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Categories -->
+      <div class="endpoint-block" id="categories">
+        <div class="endpoint-title">Hallucination Categories</div>
+        <p class="endpoint-desc">AHDS classifies flagged spans into five distinct categories, each representing a different failure mode of LLM generation.</p>
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div class="glass-card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;"><div class="cat-dot factual" style="width:10px;height:10px;"></div><span style="font-weight:700;color:var(--text-white);">Factual</span></div>
+            <p style="font-size:.85rem;color:var(--text-muted);">Plausible but incorrect facts — wrong names, dates, entities, or statistics that don't match verified knowledge bases.</p>
+          </div>
+          <div class="glass-card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;"><div class="cat-dot citation" style="width:10px;height:10px;"></div><span style="font-weight:700;color:var(--text-white);">Citation</span></div>
+            <p style="font-size:.85rem;color:var(--text-muted);">Invented or inaccurate references to papers, URLs, case law, regulations, or named sources that don't exist or don't match their claimed content.</p>
+          </div>
+          <div class="glass-card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;"><div class="cat-dot logical" style="width:10px;height:10px;"></div><span style="font-weight:700;color:var(--text-white);">Logical</span></div>
+            <p style="font-size:.85rem;color:var(--text-muted);">Self-contradictions or reasoning errors within the same response or conversation context.</p>
+          </div>
+          <div class="glass-card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;"><div class="cat-dot numerical" style="width:10px;height:10px;"></div><span style="font-weight:700;color:var(--text-white);">Numerical</span></div>
+            <p style="font-size:.85rem;color:var(--text-muted);">Incorrect calculations, measurements, dosages, or statistics presented with false precision.</p>
+          </div>
+          <div class="glass-card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;"><div class="cat-dot temporal" style="width:10px;height:10px;"></div><span style="font-weight:700;color:var(--text-white);">Temporal</span></div>
+            <p style="font-size:.85rem;color:var(--text-muted);">Post-cutoff or out-of-scope information presented as current fact, or incorrect time-based claims.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="api-docs.js"></script>
+</body>
+</html>

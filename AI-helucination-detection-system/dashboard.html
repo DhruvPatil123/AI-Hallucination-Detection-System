@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Nexa AI AHDS</title>
+  <meta name="description" content="Real-time monitoring dashboard for the AI Hallucination Detection System.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+    canvas { display: block; width: 100%; }
+    .integration-item { display: flex; align-items: center; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .int-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .int-status.ok  { background: var(--risk-low); box-shadow: 0 0 6px var(--risk-low); }
+    .int-status.warn{ background: var(--risk-medium); }
+    .int-status.err { background: var(--risk-critical); }
+    .int-name  { font-size: .84rem; color: var(--text-white); flex: 1; font-weight: 500; }
+    .int-calls { font-size: .72rem; color: var(--text-slate); font-family: 'JetBrains Mono', monospace; }
+    .live-feed-wrap { max-height: 300px; overflow-y: auto; }
+    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .filter-chip { padding: .28rem .75rem; border-radius: 9999px; border: 1px solid var(--glass-border); font-size: .72rem; font-weight: 600; color: var(--text-slate); cursor: pointer; background: none; font-family: 'Plus Jakarta Sans', sans-serif; transition: all .2s; }
+    .filter-chip.active { border-color: var(--accent-primary); color: var(--accent-primary); background: rgba(0,217,255,.07); }
+    .table-wrap { max-height: 280px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--glass-border); }
+    .refresh-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--risk-low); animation: pulse-step 1.5s ease infinite; }
+    @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 700px) { .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- Top Bar -->
+  <header class="inner-topbar">
+    <a href="index.html" class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00d9ff"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#00d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Nexa AI
+    </a>
+    <nav class="topbar-nav">
+      <a href="index.html">Home</a>
+      <a href="demo.html">Live Demo</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="api-docs.html">API Docs</a>
+    </nav>
+    <div class="topbar-right" style="display:flex;align-items:center;gap:.75rem;">
+      <div class="refresh-dot"></div>
+      <span style="font-size:.75rem; color:var(--text-slate);">Live</span>
+      <a href="api-docs.html" class="btn btn-outline" style="padding:.4rem 1rem; font-size:.82rem;">Get API Key</a>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Overview</span>
+      <a href="#" class="sidebar-link active" data-target="stats-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Overview
+      </a>
+      <a href="#" class="sidebar-link" data-target="trends-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l2-9 5 18 2-9h5"/></svg>
+        Detection Trends
+      </a>
+      <a href="#" class="sidebar-link" data-target="live-feed-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Live Feed
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Reports</span>
+      <a href="#" class="sidebar-link" data-target="audit-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Audit Log
+      </a>
+      <a href="#" class="sidebar-link" data-target="export-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export (PDF/CSV)
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Settings</span>
+      <a href="#" class="sidebar-link" data-target="alert-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Alert Config
+      </a>
+      <a href="#" class="sidebar-link" data-target="integrations-section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Integrations
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Monitoring Dashboard</h1>
+      <p>Real-time detection metrics, audit logs, and integration health across all AHDS integrations.</p>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="stats-section">
+      <div class="stat-card">
+        <div class="stat-card-label">Detection Rate</div>
+        <div class="stat-card-value" id="s-rate">—</div>
+        <div class="stat-card-sub">flagged / total requests</div>
+        <div class="stat-card-trend trend-up" id="s-rate-trend">↑ +2.1% vs last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">False Positive Rate</div>
+        <div class="stat-card-value" id="s-fpr">—</div>
+        <div class="stat-card-sub">of flagged outputs</div>
+        <div class="stat-card-trend trend-up" id="s-fpr-trend">↓ –0.8% vs last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">p95 Latency</div>
+        <div class="stat-card-value" id="s-lat">—</div>
+        <div class="stat-card-sub">API response time</div>
+        <div class="stat-card-trend trend-up">↓ –8ms vs last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">p99 Latency</div>
+        <div class="stat-card-value" id="s-lat99">—</div>
+        <div class="stat-card-sub">API response time</div>
+        <div class="stat-card-trend trend-up">↓ –15ms vs last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Uptime (30d)</div>
+        <div class="stat-card-value" id="s-uptime">—</div>
+        <div class="stat-card-sub">SLA target: 99.9%</div>
+        <div class="stat-card-trend trend-up">✓ Within SLA</div>
+      </div>
+    </div>
+
+    <!-- Line Chart + Category Donut -->
+    <div class="grid-2">
+      <div class="glass-card" id="trends-section">
+        <div class="glass-card-header">
+          <span class="glass-card-title">Detection Rate — 7 Day Trend</span>
+          <div class="filter-bar" style="margin-bottom:0;">
+            <button class="filter-chip active" id="range-7">7D</button>
+            <button class="filter-chip" id="range-30">30D</button>
+          </div>
+        </div>
+        <canvas id="line-chart" height="180"></canvas>
+      </div>
+
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <span class="glass-card-title">Category Breakdown</span>
+          <span style="font-size:.75rem; color:var(--text-slate);">Last 7 days</span>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="donut-chart" width="140" height="140" style="flex-shrink:0;"></canvas>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Distribution + Integrations -->
+    <div class="grid-2" style="margin-bottom:1.25rem;">
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <span class="glass-card-title">Risk Level Distribution</span>
+          <span style="font-size:.75rem; color:var(--text-slate);">All flagged outputs</span>
+        </div>
+        <div id="risk-dist" style="display:flex; flex-direction:column; gap:1rem;"></div>
+      </div>
+
+      <div class="glass-card" id="integrations-section">
+        <div class="glass-card-header">
+          <span class="glass-card-title">Integration Health</span>
+          <span style="font-size:.75rem; color:var(--text-slate);">6 active</span>
+        </div>
+        <div id="integrations-list"></div>
+      </div>
+    </div>
+
+    <!-- Live Feed + Audit Log -->
+    <div class="grid-2">
+      <div class="glass-card" id="live-feed-section">
+        <div class="glass-card-header">
+          <span class="glass-card-title">Live Detection Feed</span>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <div class="refresh-dot"></div>
+            <span style="font-size:.72rem; color:var(--risk-low);">LIVE</span>
+          </div>
+        </div>
+        <div class="live-feed-wrap" id="live-feed"></div>
+      </div>
+
+      <div class="glass-card" id="audit-section">
+        <div class="glass-card-header">
+          <span class="glass-card-title">Audit Log</span>
+          <span style="font-size:.75rem; color:var(--text-slate);">Recent flagged outputs</span>
+        </div>
+        <div class="filter-bar">
+          <button class="filter-chip active" id="af-all">All</button>
+          <button class="filter-chip" id="af-high">High+</button>
+          <button class="filter-chip" id="af-crit">Critical</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Timestamp</th><th>Model ID</th><th>Score</th><th>Risk</th><th>Category</th></tr></thead>
+            <tbody id="audit-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Supabase Core & Scripts -->
+  <script src="supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

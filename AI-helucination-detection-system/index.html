@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexa AI — AI Hallucination Detection System</title>
+    <meta name="description" content="Nexa AI AHDS: Enterprise-grade hallucination detection for LLMs. Real-time span-level verification, compliance audit logs, and a developer-friendly API.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      /* Landing-page-only extra styles */
+      .metrics-bar { background: rgba(0,217,255,0.04); border-top: 1px solid rgba(0,217,255,0.1); border-bottom: 1px solid rgba(0,217,255,0.1); padding: 1.5rem 0; overflow: hidden; }
+      .metrics-bar-inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-around; align-items: center; gap: 1rem; flex-wrap: wrap; }
+      .metric-item { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+      .metric-val { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-white); }
+      .metric-val span { color: var(--accent-primary); }
+      .metric-desc { font-size: 0.78rem; color: var(--text-slate); text-transform: uppercase; letter-spacing: 0.08em; }
+      .metric-divider { width: 1px; height: 40px; background: var(--glass-border); }
+      .teaser-section { max-width: 1200px; margin: 0 auto; padding: 0 2rem 6rem; }
+      .teaser-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+      .teaser-text h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+      .teaser-text p  { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.7; }
+      .teaser-json { background: rgba(0,0,0,0.5); border: 1px solid rgba(0,217,255,0.15); border-radius: 16px; padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8; overflow: hidden; position: relative; }
+      .teaser-json::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-primary), transparent); }
+      .tj-key  { color: #7dd3fc; }
+      .tj-str  { color: #86efac; }
+      .tj-num  { color: #fda4af; }
+      .tj-bool { color: #c4b5fd; }
+      .tj-cat  { color: #f9a8d4; }
+      .cursor-blink { display: inline-block; width: 2px; height: 1em; background: var(--accent-primary); animation: blink 1s step-end infinite; vertical-align: text-bottom; margin-left: 1px; }
+      @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+      .trust-section { text-align: center; padding: 4rem 2rem 6rem; }
+      .trust-section h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-slate); margin-bottom: 2.5rem; }
+      .trust-logos { display: flex; justify-content: center; align-items: center; gap: 3rem; flex-wrap: wrap; }
+      .trust-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.1rem; color: rgba(255,255,255,0.2); letter-spacing: -0.02em; transition: color 0.3s; cursor: default; }
+      .trust-logo:hover { color: rgba(255,255,255,0.5); }
+      footer { border-top: 1px solid var(--glass-border); padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 2rem; }
+      .footer-brand p { color: var(--text-slate); font-size: 0.85rem; margin-top: 0.75rem; line-height: 1.6; max-width: 220px; }
+      .footer-col h4 { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-slate); margin-bottom: 1rem; }
+      .footer-col a { display: block; font-size: 0.875rem; color: var(--text-slate); margin-bottom: 0.6rem; transition: color 0.2s; text-decoration: none; }
+      .footer-col a:hover { color: var(--accent-primary); }
+      .footer-bottom { border-top: 1px solid var(--glass-border); padding: 1.5rem 2rem; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+      .footer-bottom p { font-size: 0.8rem; color: var(--text-slate); }
+      @media (max-width: 1024px) { .teaser-grid { grid-template-columns: 1fr; } footer { grid-template-columns: 1fr 1fr; } .metric-divider { display: none; } }
+      @media (max-width: 768px) { footer { grid-template-columns: 1fr; } .footer-bottom { flex-direction: column; gap: 0.75rem; } }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00d9ff"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#00d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Nexa AI</span>
+            </div>
+            <nav class="nav">
+                <a href="#features" class="nav-link">Features <span class="dot"></span></a>
+                <a href="#process" class="nav-link">How It Works <span class="dot"></span></a>
+                <a href="demo.html" class="nav-link" data-requires-auth>Live Demo <span class="dot"></span></a>
+                <a href="dashboard.html" class="nav-link" data-requires-auth>Dashboard <span class="dot"></span></a>
+                <a href="#pricing" class="nav-link">Pricing <span class="dot"></span></a>
+            </nav>
+            <div class="header-action">
+                <a href="api-docs.html" class="btn btn-outline" style="margin-right:0.75rem; font-size:0.85rem; padding:0.6rem 1.25rem;">API Docs</a>
+                <a href="demo.html" class="btn btn-shimmer" data-requires-auth style="font-size:0.85rem; padding:0.6rem 1.25rem;">Try Demo</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div style="display:inline-flex; align-items:center; gap:0.5rem; background:rgba(0,217,255,0.08); border:1px solid rgba(0,217,255,0.2); border-radius:9999px; padding:0.35rem 1rem; margin-bottom:1.5rem; font-size:0.8rem; color:var(--accent-primary); font-weight:600;">
+                <span style="width:6px; height:6px; background:var(--accent-primary); border-radius:50%; animation:pulse-glow 1.5s infinite alternate;"></span>
+                v1.0 — Now in Beta · Q3 2026 GA Launch
+            </div>
+            <h1 class="hero-title" id="hero-title">Eliminate AI Hallucinations</h1>
+            <p class="hero-subtitle">Enterprise-grade verification engine that intercepts, scores, and flags hallucinated content in LLM outputs — in real time, with &lt;200ms latency.</p>
+            <div class="hero-actions">
+                <a href="demo.html" class="btn btn-shimmer" data-requires-auth>Try Live Demo</a>
+                <a href="api-docs.html" class="btn btn-outline btn-icon">
+                    View API Docs
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div class="stat-counter">
+                <span class="stat-number" id="hero-stat" data-target="99.9">0.0</span><span class="stat-suffix">%</span>
+                <span class="stat-label">Detection Accuracy</span>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="liquid-sphere"></div>
+            <div class="floating-pill pill-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Fact-Checked
+            </div>
+            <div class="floating-pill pill-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Real-Time
+            </div>
+            <div class="floating-pill pill-3">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Compliance-Ready
+            </div>
+        </div>
+    </section>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-bar">
+        <div class="metrics-bar-inner">
+            <div class="metric-item">
+                <div class="metric-val"><span id="m-precision">0</span>%</div>
+                <div class="metric-desc">Detection Precision</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-val"><span id="m-recall">0</span>%</div>
+                <div class="metric-desc">Detection Recall</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-val"><span id="m-latency">0</span>ms</div>
+                <div class="metric-desc">p95 API Latency</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-val"><span id="m-uptime">0</span>%</div>
+                <div class="metric-desc">Uptime SLA</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-val"><span id="m-integrations">0</span>+</div>
+                <div class="metric-desc">Active Integrations</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <h2>Deep Neural Verification</h2>
+            <p>Our multi-layered detection architecture catches hallucinations before they reach your users — across 5 distinct failure categories.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon-container">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+                </div>
+                <h3>RAG Grounding</h3>
+                <p>Retrieval-augmented verification against trusted domain knowledge bases. Medical, legal, and financial corpora built in.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-container">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Span-Level Detection</h3>
+                <p>Pinpoints the exact sentence or phrase that's hallucinated — not just a binary flag on the whole response.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-container">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l2-9 5 18 2-9h5"/></svg>
+                </div>
+                <h3>Real-Time Metrics</h3>
+                <p>Live dashboard tracking detection rate, false positive rate, latency percentiles, and system drift alerts.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-container">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <h3>Compliance Audit Logs</h3>
+                <p>Every flagged output is logged with metadata — timestamp, model ID, hash, score, and flag reason. 90-day retention.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process" id="process">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>A five-stage verification pipeline — from raw LLM output to a calibrated confidence score — in under 200ms.</p>
+        </div>
+        <div class="process-wrapper">
+            <div class="process-line"></div>
+            <div class="process-grid">
+                <div class="process-card">
+                    <div class="step-number">01</div>
+                    <h3>Intercept Output</h3>
+                    <p>AHDS sits as a middleware layer, intercepting the raw LLM response before it is served to the end-user.</p>
+                </div>
+                <div class="process-card">
+                    <div class="step-number">02</div>
+                    <h3>RAG Retrieval</h3>
+                    <p>The retrieval engine fetches grounding evidence from domain knowledge bases and the live web index.</p>
+                </div>
+                <div class="process-card">
+                    <div class="step-number">03</div>
+                    <h3>Consistency Check</h3>
+                    <p>N sampled completions are compared for semantic agreement, identifying logical contradictions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Teaser Section -->
+    <section style="padding: 4rem 0 6rem;">
+        <div class="teaser-section">
+            <div class="teaser-grid">
+                <div class="teaser-text">
+                    <h2>A Structured Response<br>for Every Verification</h2>
+                    <p>AHDS returns a rich JSON payload with a calibrated hallucination score, span-level annotations, category labels, and evidence — everything your application needs to act with confidence.</p>
+                    <a href="api-docs.html" class="btn btn-shimmer">Explore the API →</a>
+                </div>
+                <div class="teaser-json" id="teaser-json" aria-label="API response example"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="section-header">
+            <h2>Transparent Pricing</h2>
+            <p>Scale your AI safety seamlessly. All plans include the core detection engine.</p>
+        </div>
+        <div class="billing-toggle">
+            <span class="toggle-label" id="label-monthly">Monthly</span>
+            <div class="toggle-switch" id="billing-switch">
+                <div class="toggle-circle"></div>
+            </div>
+            <span class="toggle-label active" id="label-annual">Annual <span style="font-size:0.72rem; color:var(--risk-low); font-weight:700;">–20%</span></span>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Starter</h3>
+                <div class="price"><span class="currency">$</span><span class="amount" data-monthly="49" data-annual="39">39</span><span class="period">/mo</span></div>
+                <p class="pricing-desc">Perfect for small teams testing AI workflows.</p>
+                <ul class="features-list">
+                    <li>100k API calls / month</li>
+                    <li>Factual &amp; Citation detection</li>
+                    <li>Standard dashboard</li>
+                    <li>Standard support</li>
+                </ul>
+                <a href="demo.html" class="btn btn-outline full-width" data-requires-auth>Get Started</a>
+            </div>
+            <div class="pricing-card pro">
+                <div class="badge-shimmer">Most Popular</div>
+                <h3>Enterprise</h3>
+                <div class="price"><span class="currency">$</span><span class="amount" data-monthly="199" data-annual="159">159</span><span class="period">/mo</span></div>
+                <p class="pricing-desc">Advanced protection for production applications.</p>
+                <ul class="features-list">
+                    <li>Unlimited API calls</li>
+                    <li>All 5 hallucination categories</li>
+                    <li>Custom knowledge bases</li>
+                    <li>Feedback loop &amp; retraining</li>
+                    <li>Priority 24/7 support</li>
+                </ul>
+                <a href="demo.html" class="btn btn-shimmer full-width" data-requires-auth>Start Free Trial</a>
+            </div>
+            <div class="pricing-card">
+                <h3>Dedicated</h3>
+                <div class="price"><span class="custom-price">Custom</span></div>
+                <p class="pricing-desc">For massive scale and compliance requirements.</p>
+                <ul class="features-list">
+                    <li>On-premise deployment</li>
+                    <li>Dedicated account manager</li>
+                    <li>Custom model fine-tuning</li>
+                    <li>99.9% SLA guarantee</li>
+                </ul>
+                <a href="#" class="btn btn-outline full-width">Contact Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="marquee-container">
+            <div class="marquee-track">
+                <div class="testimonial-card">
+                    <div class="stars" data-rating="5"></div>
+                    <p>"Nexa AI completely eliminated the factual errors our support bot was making. The span-level annotations are a game-changer."</p>
+                    <div class="author">— Sarah J., CTO · HealthTech Inc.</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars" data-rating="5"></div>
+                    <p>"Integration took under an hour. We instantly saw a 99% drop in hallucinated case citations in our legal AI."</p>
+                    <div class="author">— Mark T., Lead Engineer · LexAI</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars" data-rating="4"></div>
+                    <p>"Essential middleware for any serious LLM deployment. The compliance audit logs saved us months of manual review."</p>
+                    <div class="author">— Elena R., Product Manager · FinServe</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars" data-rating="5"></div>
+                    <p>"We couldn't release our clinical AI without AHDS. It provides the certainty regulators demand."</p>
+                    <div class="author">— Dr. Alan B., Chief Medical Officer · MediCore</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars" data-rating="5"></div>
+                    <p>"The feedback loop is incredible. Each week the model gets more accurate on our domain-specific edge cases."</p>
+                    <div class="author">— Priya S., ML Platform Lead · DataDrive</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Logos -->
+    <div class="trust-section">
+        <h3>Trusted by teams at forward-thinking companies</h3>
+        <div class="trust-logos">
+            <div class="trust-logo">MediCore</div>
+            <div class="trust-logo">LexAI</div>
+            <div class="trust-logo">FinServe</div>
+            <div class="trust-logo">DataDrive</div>
+            <div class="trust-logo">HealthTech</div>
+            <div class="trust-logo">Vertex Labs</div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-container">
+            <div class="cta-glow glow-1"></div>
+            <div class="cta-glow glow-2"></div>
+            <h2>Ready to secure your AI?</h2>
+            <p>Join forward-thinking companies deploying LLMs safely with Nexa AI AHDS.</p>
+            <div class="cta-actions">
+                <a href="demo.html" class="btn btn-shimmer" data-requires-auth>Try Live Demo</a>
+                <a href="dashboard.html" class="btn btn-outline btn-icon" data-requires-auth>
+                    View Dashboard
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-brand">
+            <div class="logo" style="margin-bottom:0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00d9ff"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#00d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="font-family:'Outfit',sans-serif;font-weight:800;color:white;">Nexa AI</span>
+            </div>
+            <p>Enterprise-grade hallucination detection for large language models. Built for reliability, designed for developers.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Product</h4>
+            <a href="demo.html" data-requires-auth>Live Demo</a>
+            <a href="dashboard.html" data-requires-auth>Dashboard</a>
+            <a href="api-docs.html">API Reference</a>
+            <a href="#pricing">Pricing</a>
+        </div>
+        <div class="footer-col">
+            <h4>Developers</h4>
+            <a href="api-docs.html#authentication">Authentication</a>
+            <a href="api-docs.html#verify">Verify Endpoint</a>
+            <a href="api-docs.html#batch">Batch API</a>
+            <a href="api-docs.html#feedback">Feedback API</a>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <a href="#">About</a>
+            <a href="#">Security</a>
+            <a href="#">Compliance</a>
+            <a href="#">Status</a>
+        </div>
+    </footer>
+    <div class="footer-bottom">
+        <p>© 2026 Nexa AI · AI Hallucination Detection System v1.0</p>
+        <p style="color:var(--text-slate); font-size:0.78rem;">SOC 2 Type II · HIPAA Ready · GDPR Compliant</p>
+    </div>
+
+    <!-- Supabase Core & Scripts -->
+    <script src="supabase.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>

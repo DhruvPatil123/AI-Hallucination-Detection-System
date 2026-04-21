@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Detection Demo — Nexa AI AHDS</title>
+  <meta name="description" content="Try the AI Hallucination Detection System live. Paste any LLM output and see span-level annotations in real time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .demo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .demo-col { display: flex; flex-direction: column; gap: 1.25rem; }
+    .input-area { width: 100%; min-height: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1rem 1.25rem; color: var(--text-white); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.9rem; line-height: 1.7; resize: vertical; outline: none; transition: border-color .3s; }
+    .input-area:focus { border-color: rgba(0,217,255,0.4); }
+    .example-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip { padding: .3rem .85rem; border-radius: 9999px; border: 1px solid var(--glass-border); font-size: .75rem; font-weight: 600; color: var(--text-slate); cursor: pointer; transition: all .2s; background: none; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .chip:hover, .chip.active { border-color: var(--accent-primary); color: var(--accent-primary); background: rgba(0,217,255,.07); }
+    .controls-row { display: flex; align-items: center; gap: 1rem; }
+    .threshold-wrap { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+    .threshold-wrap label { font-size: .78rem; font-weight: 600; color: var(--text-slate); white-space: nowrap; }
+    input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; outline: none; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-primary); box-shadow: 0 0 8px rgba(0,217,255,.5); }
+    .threshold-val { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--accent-primary); font-weight: 600; min-width: 30px; }
+    .domain-select { background: rgba(0,0,0,.3); border: 1px solid var(--glass-border); color: var(--text-white); padding: .45rem .85rem; border-radius: 9px; font-size: .82rem; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; }
+    .analyze-btn { background: var(--accent-primary); color: #0a0f1c; border: none; padding: .75rem 2rem; border-radius: 9999px; font-weight: 700; font-size: .95rem; cursor: pointer; transition: all .3s; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; position: relative; overflow: hidden; }
+    .analyze-btn::before { content: ''; position: absolute; top:0; left:-100%; width:50%; height:100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent); transform: skewX(-45deg); transition: left .5s; }
+    .analyze-btn:hover::before { left: 200%; }
+    .analyze-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .annotated-text { background: rgba(0,0,0,.25); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.25rem; font-size: .9rem; line-height: 1.9; color: var(--text-muted); min-height: 200px; }
+    .results-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+    .score-row { display: flex; gap: 1.5rem; align-items: center; }
+    .gauge-area { flex-shrink: 0; }
+    .score-details { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+    .spans-table-wrap { max-height: 220px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--glass-border); }
+    .json-collapsible summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--text-slate); padding: .5rem; list-style: none; display: flex; align-items: center; gap: .5rem; }
+    .json-collapsible summary::before { content: '▶'; font-size: .65rem; transition: transform .2s; }
+    details[open] summary::before { transform: rotate(90deg); }
+    .feedback-row { display: flex; gap: 1rem; align-items: center; }
+    .feedback-btn { display: flex; align-items: center; gap: .4rem; padding: .4rem .9rem; border-radius: 9999px; border: 1px solid var(--glass-border); background: none; color: var(--text-slate); font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .feedback-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+    .feedback-btn.positive:hover { border-color: var(--risk-low); color: var(--risk-low); }
+    .feedback-btn.negative:hover  { border-color: var(--risk-critical); color: var(--risk-critical); }
+    .legend-wrap { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; }
+    .legend-item-inline { display: flex; align-items: center; gap: .4rem; font-size: .75rem; color: var(--text-slate); }
+    .placeholder-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; text-align: center; gap: 0.75rem; opacity: .5; }
+    .placeholder-msg svg { opacity: .4; }
+    @media (max-width: 1024px) { .demo-layout { grid-template-columns: 1fr; } .score-row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- Top Bar -->
+  <header class="inner-topbar">
+    <a href="index.html" class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00d9ff"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#00d9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Nexa AI
+    </a>
+    <nav class="topbar-nav">
+      <a href="index.html">Home</a>
+      <a href="demo.html" class="active">Live Demo</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="api-docs.html">API Docs</a>
+    </nav>
+    <div class="topbar-right">
+      <a href="api-docs.html" class="btn btn-outline" style="padding:.4rem 1rem; font-size:.82rem;">Get API Key</a>
+    </div>
+  </header>
+
+  <div style="margin-top:64px; max-width:1300px; margin-left:auto; margin-right:auto; padding:2.5rem 2rem;">
+
+    <div class="page-header">
+      <h1>Live Detection Demo</h1>
+      <p>Paste any AI-generated text to see hallucination detection in action — span-level annotations, risk scoring, and category breakdown.</p>
+    </div>
+
+    <!-- Example selector -->
+    <div class="glass-card" style="margin-bottom:1.5rem;">
+      <div class="glass-card-header" style="margin-bottom:1rem;">
+        <span class="glass-card-title">Load Example Scenario</span>
+        <span style="font-size:.78rem; color:var(--text-slate);">Select a pre-built scenario or paste your own text below</span>
+      </div>
+      <div class="example-chips">
+        <button class="chip" data-example="medical" id="chip-medical">🏥 Medical Dosage</button>
+        <button class="chip" data-example="legal" id="chip-legal">⚖️ Legal Citation</button>
+        <button class="chip" data-example="financial" id="chip-financial">📈 Financial Report</button>
+        <button class="chip" data-example="technical" id="chip-technical">💻 Technical Docs</button>
+        <button class="chip" data-example="factual" id="chip-factual">🌍 Historical Facts</button>
+      </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="demo-layout">
+      <!-- LEFT: Input -->
+      <div class="demo-col">
+        <div class="glass-card">
+          <div class="glass-card-header">
+            <span class="glass-card-title">AI Response Input</span>
+            <span id="char-count" style="font-size:.75rem; color:var(--text-slate);">0 chars</span>
+          </div>
+          <textarea class="input-area" id="input-text" placeholder="Paste LLM-generated text here, or select a scenario above..."></textarea>
+          <div class="controls-row" style="margin-top:1rem; flex-wrap:wrap; gap:.75rem;">
+            <div class="threshold-wrap">
+              <label>Threshold</label>
+              <input type="range" id="threshold-slider" min="0" max="100" value="40">
+              <span class="threshold-val" id="threshold-val">0.40</span>
+            </div>
+            <select class="domain-select" id="domain-select">
+              <option value="general">General</option>
+              <option value="medical">Medical</option>
+              <option value="legal">Legal</option>
+              <option value="financial">Financial</option>
+            </select>
+            <button class="analyze-btn" id="analyze-btn">
+              <span id="btn-text">Analyze</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pipeline -->
+        <div class="glass-card" id="pipeline-card" style="display:none;">
+          <div class="glass-card-title" style="margin-bottom:1.25rem;">Verification Pipeline</div>
+          <div class="pipeline" id="pipeline">
+            <div class="pipeline-step"><div class="pipeline-dot" id="pd-0">01</div><div class="pipeline-label">Ingest</div></div>
+            <div class="pipeline-connector" id="pc-0"></div>
+            <div class="pipeline-step"><div class="pipeline-dot" id="pd-1">02</div><div class="pipeline-label">RAG Retrieval</div></div>
+            <div class="pipeline-connector" id="pc-1"></div>
+            <div class="pipeline-step"><div class="pipeline-dot" id="pd-2">03</div><div class="pipeline-label">Consistency</div></div>
+            <div class="pipeline-connector" id="pc-2"></div>
+            <div class="pipeline-step"><div class="pipeline-dot" id="pd-3">04</div><div class="pipeline-label">Classifier</div></div>
+            <div class="pipeline-connector" id="pc-3"></div>
+            <div class="pipeline-step"><div class="pipeline-dot" id="pd-4">05</div><div class="pipeline-label">Score</div></div>
+          </div>
+        </div>
+
+        <!-- Category Legend -->
+        <div class="glass-card">
+          <div class="glass-card-title" style="margin-bottom:1rem;">Category Legend</div>
+          <div class="legend-wrap">
+            <div class="legend-item-inline"><div class="cat-dot factual"></div> Factual Fabrication</div>
+            <div class="legend-item-inline"><div class="cat-dot citation"></div> Source Hallucination</div>
+            <div class="legend-item-inline"><div class="cat-dot logical"></div> Logical Inconsistency</div>
+            <div class="legend-item-inline"><div class="cat-dot numerical"></div> Numerical Error</div>
+            <div class="legend-item-inline"><div class="cat-dot temporal"></div> Knowledge Boundary</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div class="demo-col">
+        <div class="glass-card">
+          <div class="glass-card-title" style="margin-bottom:1.25rem;">Annotated Output</div>
+          <div id="annotated-output">
+            <div class="placeholder-msg">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <p>Results will appear here after analysis.<br>Flagged spans will be highlighted by category.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="results-panel" class="results-panel" style="display:none;">
+          <!-- Score & Risk -->
+          <div class="glass-card">
+            <div class="glass-card-header">
+              <span class="glass-card-title">Hallucination Score</span>
+              <span id="processing-time" style="font-size:.75rem; color:var(--text-slate);"></span>
+            </div>
+            <div class="score-row">
+              <div class="gauge-area">
+                <div class="gauge-wrap">
+                  <svg class="gauge-svg" width="140" height="140" viewBox="0 0 140 140">
+                    <circle class="gauge-bg" cx="70" cy="70" r="55"/>
+                    <circle class="gauge-fill" id="gauge-fill" cx="70" cy="70" r="55"
+                      stroke="#22d3a0"
+                      stroke-dasharray="345.6"
+                      stroke-dashoffset="345.6"
+                      transform="rotate(-90 70 70)"/>
+                    <text class="gauge-label" id="gauge-label" x="70" y="66">0.0</text>
+                    <text class="gauge-sublabel" x="70" y="84">score</text>
+                  </svg>
+                </div>
+              </div>
+              <div class="score-details">
+                <div>
+                  <div style="font-size:.72rem; color:var(--text-slate); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.35rem;">Risk Level</div>
+                  <span class="risk-badge low" id="risk-badge">LOW</span>
+                </div>
+                <div>
+                  <div style="font-size:.72rem; color:var(--text-slate); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.35rem;">Flagged Spans</div>
+                  <span id="span-count" style="font-family:'Outfit',sans-serif; font-size:1.5rem; font-weight:800; color:var(--text-white);">0</span>
+                </div>
+                <div>
+                  <div style="font-size:.72rem; color:var(--text-slate); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.35rem;">Model Version</div>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--text-muted);">ahds-v1.0.4</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flagged Spans Table -->
+          <div class="glass-card" id="spans-card" style="display:none;">
+            <div class="glass-card-title" style="margin-bottom:1rem;">Flagged Spans</div>
+            <div class="spans-table-wrap">
+              <table class="data-table" id="spans-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Text</th>
+                    <th>Confidence</th>
+                    <th>Evidence</th>
+                    <th>Feedback</th>
+                  </tr>
+                </thead>
+                <tbody id="spans-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Raw JSON -->
+          <div class="glass-card">
+            <details class="json-collapsible">
+              <summary>Raw JSON Response</summary>
+              <div style="margin-top:.75rem; position:relative;">
+                <div class="code-block" id="raw-json"></div>
+                <button class="copy-btn" id="copy-json-btn">Copy</button>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="span-tooltip" id="span-tooltip">
+    <div class="span-tooltip-cat" id="tt-cat"></div>
+    <div class="span-tooltip-conf" id="tt-conf"></div>
+    <div class="span-tooltip-ev" id="tt-ev"></div>
+  </div>
+
+  <!-- Supabase Core & Scripts -->
+  <script src="supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+
+  <script src="demo.js"></script>
+</body>
+</html>
